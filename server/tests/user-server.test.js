@@ -483,3 +483,115 @@ describe('UPDATE /users/:id', () => {
   });
 
 });
+
+
+
+describe('DELETE /users/:id', () => {
+
+  it('should delete user if logged in as admin and user is not you', (done) => {
+    let id = users[1].tokens[0].token;
+    request(app)
+      .delete('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send()
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe(users[1].name);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          expect(user).toNotExist();
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should not delete user for id not owned and not admin', (done) => {
+    let id = users[0].tokens[0].token;
+    request(app)
+      .delete('/users/' + id)
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send()
+      .expect(401)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          expect(user.name).toBe(users[0].name);
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+    it('should not delete admin user', (done) => {
+    let id = users[0].tokens[0].token;
+    request(app)
+      .delete('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send()
+      .expect(404)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          expect(user.name).toBe(users[0].name);
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should delete user for id not owned but admin', (done) => {
+    let id = users[1].tokens[0].token;
+    request(app)
+      .delete('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send()
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe(users[1].name);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findByToken(id).then((user) => {
+           expect(user).toNotExist();
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should return 401 if token found', (done) => {
+
+    let id = new ObjectID().toHexString();
+    request(app)
+      .delete('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send()
+      .expect(401)
+      .expect((res) => {
+        expect(res.body.error).toBe(undefined);
+      })
+      .end(done);
+  });
+
+});

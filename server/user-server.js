@@ -125,44 +125,47 @@ const addUserRoutes = (app, _, authenticate) => {
     });
 
     app.delete('/users/:id', authenticate, (req, res) => {
-        if (req.user.adminUser) {
-            let {
-                id,
-                adminUser
-            } = req.params;
 
+        let token = req.params.id;
 
-            if (!ObjectID.isValid(id)) {
-                return res.status(404).send({
-                    error: "User ID is invalid"
-                });
+        User.findByToken(token).then((user) => {
+            if (!user) {
+                return Promise.reject();
+            };
+            let decoded;
+            try {
+                decoded = jwt.verify(token, seed);
+            } catch (e) {
+                return Promise.reject();
             };
 
-            let userObj = {
-                '_id': id
-            };
+            if (req.user.adminUser || req.user._id == decoded._id) {
+                let userObj = {
+                    '_id': decoded._id,
+                    'tokens.token': token,
+                    'tokens.access': 'auth',
+                    adminUser: false
+                };
 
-            if (adminUser) {
-                return res.status(404).send({
-                    error: "Cannot delete an admin user!"
+                User.findOneAndRemove(userObj).then((user) => {
+                    if (user) {
+                        res.send(_.pick(user, userOutFields));
+                    } else {
+                        res.status(404).send({
+                            error: "user not found for id"
+                        });
+                    };
+                }, () => {
+                    res.status(400).send();
                 });
-            }
 
-            User.findOneAndRemove(userObj).then((user) => {
-                if (user) {
-                    res.send(_.pick(user, userOutFields));
-                } else {
-                    res.status(404).send({
-                        error: "User not found for id!"
-                    });
-                }
-
-            }, (e) => {
-                res.status(400).send();
-            });
-        } else {
+            } else {
+                res.status(401).send();
+            };
+        }).catch((e) => {
             res.status(401).send();
-        }
+        });
+
     });
 };
 
