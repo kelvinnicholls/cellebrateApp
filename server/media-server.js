@@ -255,7 +255,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             }
 
         }, (e) => {
-            res.status(400).send(e);
+            res.status(400).send();
         });
     });
 };

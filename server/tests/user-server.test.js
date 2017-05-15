@@ -3,10 +3,17 @@ const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const {ObjectID} = require('mongodb');
+const {
+  ObjectID
+} = require('mongodb');
 
-const {app} = require('./../server');
-const {User,seed} = require('./../models/user');
+const {
+  app
+} = require('./../server');
+const {
+  User,
+  seed
+} = require('./../models/user');
 
 const {
   populateUsers,
@@ -48,7 +55,7 @@ describe('GET /users/me', () => {
 
 
 describe('POST /users', () => {
-  it('should create a user', (done) => {
+  it('should create a user if admin user', (done) => {
     let email = 'email3@email.com';
     let password = 'email3.password';
 
@@ -66,6 +73,9 @@ describe('POST /users', () => {
     };
     request(app)
       .post('/users/')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
       .send(user)
       .expect(200)
       .expect((res) => {
@@ -77,21 +87,9 @@ describe('POST /users', () => {
           _id: res.body._id,
           access
         }, seed).toString();
-        //expect(res.body.tokens[0].token).toBe(token);
         expect(res.body._id).toExist();
-        expect(res.headers['x-auth']).toExist();
-        // let hashedPassword = '';
-        // bcrypt.genSalt(10, (err, salt) => {
-        //   if (!err) {
-        //     bcrypt.hash(password, salt, (err, hash) => {
-        //       if (!err) {
-        //         hashedPassword = hash;
-        //       }
-        //     });
-        //   }
-        // });
+        // expect(res.headers['x-auth']).toExist(); only available on login now
 
-        //expect(res.body.password).toBe(hashedPassword);
       })
       .end((err) => {
         if (err) {
@@ -107,11 +105,52 @@ describe('POST /users', () => {
         }).catch((e) => done(e));
       });
   });
+
+  it('should not create a user if not admin user', (done) => {
+    let email = 'email3@email.com';
+    let password = 'email3.password';
+
+    let name = "Kelvin";
+    let adminUser = true;
+    let relationship = "Son";
+    let dob = 2342323;
+    let user = {
+      email,
+      password,
+      name,
+      adminUser,
+      relationship,
+      dob
+    };
+    request(app)
+      .post('/users/')
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send(user)
+      .expect(401)
+      .end((err) => {
+        if (err) {
+          return done(err);
+        }
+        User.findOne({
+          email
+        }).then((user) => {
+          expect(user).toNotExist();
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+
   it('should return validation errors if request invalid', (done) => {
     let email = 'email4.email.com';
     let password = 'email4.password';
     request(app)
       .post('/users/')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
       .send({
         email,
         password
@@ -122,11 +161,15 @@ describe('POST /users', () => {
       })
       .end(done);
   });
+
   it('should not create a user if email in use', (done) => {
     let email = users[0].email;
     let password = users[0].password;
     request(app)
       .post('/users/')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
       .send({
         email,
         password
@@ -137,12 +180,16 @@ describe('POST /users', () => {
       })
       .end(done);
   });
-    it('should not create a user if name in use', (done) => {
+
+  it('should not create a user if name in use', (done) => {
     let name = users[0].name;
     let email = 'email5.email.com';
     let password = 'email5.password';
     request(app)
       .post('/users/')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
       .send({
         email,
         password,
@@ -256,6 +303,138 @@ describe('DELETE /users/me/token', () => {
           done();
         }).catch((e) => done(e));
       });
+  });
+
+});
+
+describe('UPDATE /users/:id', () => {
+
+  it('should update user for id if id for logged in user', (done) => {
+    let user = users[1];
+    let oldName = users[1].name;
+    let newName = users[1].name + ' UPDATED';
+    user.name = newName;
+    let id = users[1].tokens[0].token;
+    request(app)
+      .patch('/users/' + id)
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send(user)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe(newName);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          console.log("user", user);
+          expect(user.name).toBe(newName);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should update user if logged in as admin and user is not you', (done) => {
+    let user = users[1];
+    let oldName = users[1].name;
+    let newName = users[1].name + ' UPDATED';
+    user.name = newName;
+    let id = users[1].tokens[0].token;
+    request(app)
+      .patch('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send(user)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe(newName);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          expect(user.name).toBe(newName);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should not update user for id not owned and not admin', (done) => {
+    let user = users[0];
+    let oldName = users[0].name;
+    let newName = users[0].name + ' UPDATED';
+    user.name = newName;
+    let id = users[0].tokens[0].token;
+    request(app)
+      .patch('/users/' + id)
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send(user)
+      .expect(401)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(id).then((user) => {
+          expect(user.name).toBe(oldName);
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should  update user for id not owned but admin', (done) => {
+    let user = users[1];
+    let oldName = users[1].name;
+    let newName = users[1].name + ' UPDATED';
+    user.name = newName;
+    let id = users[1].tokens[0].token;
+    request(app)
+      .patch('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send(user)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.name).toBe(newName);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findByToken(id).then((id) => {
+          expect(user.name).toBe(newName);
+          done();
+        }).catch((e) => done(e));
+
+      });
+  });
+
+  it('should return 401 if token found', (done) => {
+    let user = users[0];
+    let oldName = users[0].name;
+    let newName = users[0].name + ' UPDATED';
+    user.name = newName;
+    let id = new ObjectID().toHexString();
+    request(app)
+      .patch('/users/' + id)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send(user)
+      .expect(401)
+      .expect((res) => {
+        expect(res.body.error).toBe(undefined);
+      })
+      .end(done);
   });
 
 });
