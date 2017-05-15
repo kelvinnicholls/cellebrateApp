@@ -5,9 +5,6 @@ const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 let config = require('../config/config.js')
 const seed = process.env.JWT_SECRET;
-
-console.log("seed", seed);
-
 let UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -60,9 +57,7 @@ let UserSchema = new mongoose.Schema({
 //override this method
 UserSchema.methods.toJSON = function () {
   let user = this;
-  console.log("user", user);
   let userObject = user.toObject();
-  console.log("userObject", userObject);
   //return _.pick(userObject, ['_id', 'email','tokens']);
   return _.pick(userObject, ['_id', 'email']);
 };
@@ -117,7 +112,6 @@ UserSchema.statics.findByCredentials = function (email, password) {
 
 
 UserSchema.statics.findByToken = function (token) {
-  console.log('findByToken', token);
   let User = this;
   let decoded;
   try {

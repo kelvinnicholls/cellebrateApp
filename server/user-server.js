@@ -42,27 +42,17 @@ const addUserRoutes = (app, _, authenticate) => {
     app.patch('/users/:id', authenticate, (req, res) => {
         let token = req.params.id;
 
-        console.log("token", token);
-
         User.findByToken(token).then((user) => {
-            console.log("findByToken", user);
             if (!user) {
-                console.log("findByToken", 1);
                 return Promise.reject();
             };
-            console.log("findByToken", 2);
             let decoded;
             try {
-                console.log("findByToken", 3, seed);
                 decoded = jwt.verify(token, seed);
             } catch (e) {
-                console.log("findByToken", 4, e);
-                return Promise.reject();
+                 return Promise.reject();
             }
-            console.log("findByToken", 5);
-            console.log("findByToken req.user.adminUser", req.user.adminUser);
-            console.log("findByToken decoded._id", decoded._id);
-            console.log("findByToken  req.user._id", req.user._id);
+;
 
             if (req.user.adminUser || req.user._id == decoded._id) {
                 let userObj = {
@@ -70,9 +60,6 @@ const addUserRoutes = (app, _, authenticate) => {
                     'tokens.token': token,
                     'tokens.access': 'auth'
                 };
-
-                console.log("findByToken  userObj", userObj);
-
                 let body = _.pick(req.body, usersUpdateFields);
 
                 User.findOneAndUpdate(userObj, {
@@ -81,7 +68,6 @@ const addUserRoutes = (app, _, authenticate) => {
                     new: true
                 }).then((user) => {
                     if (user) {
-                        console.log("findByToken  user", _.pick(user, userOutFields));
                         res.send(_.pick(user, userOutFields));
                     } else {
                         res.status(404).send({
@@ -93,12 +79,10 @@ const addUserRoutes = (app, _, authenticate) => {
                 });
 
             } else {
-                console.log("findByToken  err");
-                res.status(401).send();
+                 res.status(401).send();
             };
         }).catch((e) => {
-            console.log("findByToken  err",e);
-            res.status(401).send();
+             res.status(401).send();
         });
 
     });

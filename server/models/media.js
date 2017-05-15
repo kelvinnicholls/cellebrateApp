@@ -73,27 +73,21 @@ MediaSchema.pre('save', function (next) {
     let userIds = [];
     let numUsers = media.users.length;
     let userCount = 0;
-    console.log("MediaSchema.pre users1",users);
-    console.log("MediaSchema.pre numUsers",numUsers);
+
     if (numUsers > 0) {
-        console.log("MediaSchema.pre users2",users);
-        users.forEach(function (name) {
-            console.log("MediaSchema.pre name",name);
+         users.forEach(function (name) {
             User.findOne({
                 name
             }).then((user) => {
-                console.log("MediaSchema.pre user", user);
-                if (user) {
+                 if (user) {
                     userIds.push(user._id);
                 };
                 userCount++;
                 if (userCount === numUsers) {
                     media.users = userIds;
-                    console.log("MediaSchema.pre media",media);
                     next();
                 }
             }, (e) => {
-                console.log("MediaSchema.pre error", e);
             });
         });
     } else {

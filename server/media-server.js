@@ -14,33 +14,24 @@ const {
 let setUserIdsToNames = (ids) => {
     return new Promise((resolve, reject) => {
 
-        console.log("setUserIdsToNames ids", ids);
         let retArray = [];
         let numIds = ids.length;
         let idCount = 0;
-        console.log("setUserIdsToNames numIds", numIds);
-        console.log("setUserIdsToNames idCount", idCount);
-        if (numIds > 0) {
+         if (numIds > 0) {
             ids.forEach(function (id) {
-                console.log("setUserIdsToNames id", id);
-                User.findById(id).then((user) => {
-                    console.log("setUserIdsToNames user", user);
+                 User.findById(id).then((user) => {
                     if (user) {
                         retArray.push(user.name);
                     };
                     idCount++;
                     if (idCount === numIds) {
-                        console.log("setUserIdsToNames return retArray1", retArray);
                         return resolve(retArray);
                     }
                 }, (e) => {
-                    console.log("setUserIdsToNames error", e);
-                    console.log("setUserIdsToNames return retArray2", retArray);
-                    return reject(e);
+                     return reject(e);
                 });
             });
         } else {
-            console.log("setUserIdsToNames return retArray3", retArray);
             return resolve(retArray);
         };
     });
@@ -117,17 +108,13 @@ const addMediaRoutes = (app, _, authenticate) => {
             });
         };
 
-        console.log("YYY id", id);
 
         Media.findOne({
             '_id': id
         }).then((media) => {
-            console.log("media", media);
-            if (media) {
+             if (media) {
                 setUserIdsToNames(media.users).then((names) => {
-                    console.log("app.get('/medias/:id' names", names);
                     media.users = names;
-                    console.log("app.get('/medias/:id' media.users", media.users);
                     res.send({
                         media
                     });
@@ -142,8 +129,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             }
 
         }, (e) => {
-            console.log("app.get('/medias/:id' error", e);
-            res.status(400).send();
+             res.status(400).send();
         });
     });
 

@@ -81,8 +81,7 @@ describe('POST /users', () => {
       .expect((res) => {
         expect(res.body.email).toBe(email);
         let access = 'auth';
-        console.log("res.body", res.body);
-        console.log("res.body.user", res.body.user);
+
         let token = jwt.sign({
           _id: res.body._id,
           access
@@ -330,7 +329,7 @@ describe('UPDATE /users/:id', () => {
           return done(err);
         }
         User.findByToken(id).then((user) => {
-          console.log("user", user);
+
           expect(user.name).toBe(newName);
           done();
         }).catch((e) => done(e));

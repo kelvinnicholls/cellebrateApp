@@ -55,8 +55,6 @@ describe('GET /medias', () => {
 
 describe('GET /medias/:id', () => {
   it('should get media for id', (done) => {
-    console.log("GET /medias/:id users", users);
-    console.log("GET /medias/:id medias", medias);
     let id = medias[0]._id.toHexString();
     request(app)
       .get('/medias/' + id)
@@ -66,7 +64,6 @@ describe('GET /medias/:id', () => {
       .expect(200)
       .expect((res) => {
         expect(res.body.media._id).toBe(id);
-        console.log("res.body.media", res.body.media);
         expect(res.body.media.users[0]).toBe(users[0].name);
         expect(res.body.media.users[1]).toBe(users[1].name);
       })
