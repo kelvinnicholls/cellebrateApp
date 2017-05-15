@@ -54,6 +54,52 @@ describe('GET /users/me', () => {
 });
 
 
+describe('GET /users/', () => {
+
+  it('should return all user\s if admin user', (done) => {
+    request(app)
+      .get('/users')
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.length).toBe(2);
+      })
+      .end(done);
+  });
+
+  it('should return current user if not admin user', (done) => {
+    request(app)
+      .get('/users')
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.length).toBe(1);
+      })
+      .end(done);
+  });
+
+
+  it('should return 401 if not authenticated', (done) => {
+    request(app)
+      .get('/users')
+      .set({
+        'x-auth': 'xx'
+      })
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+
+});
+
+
+
 describe('POST /users', () => {
   it('should create a user if admin user', (done) => {
     let email = 'email3@email.com';

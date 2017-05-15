@@ -50,9 +50,8 @@ const addUserRoutes = (app, _, authenticate) => {
             try {
                 decoded = jwt.verify(token, seed);
             } catch (e) {
-                 return Promise.reject();
-            }
-;
+                return Promise.reject();
+            };
 
             if (req.user.adminUser || req.user._id == decoded._id) {
                 let userObj = {
@@ -79,10 +78,10 @@ const addUserRoutes = (app, _, authenticate) => {
                 });
 
             } else {
-                 res.status(401).send();
+                res.status(401).send();
             };
         }).catch((e) => {
-             res.status(401).send();
+            res.status(401).send();
         });
 
     });
@@ -95,12 +94,21 @@ const addUserRoutes = (app, _, authenticate) => {
     app.get('/users/', authenticate, (req, res) => {
 
         let userObj = {};
+
         if (!req.user.adminUser) {
-            userObj._creator = req.user._id;
+            userObj._id = req.user._id;
         };
 
         User.find(userObj).then((users) => {
-            res.send(_.pick(user, userOutFields));
+            if (users) {
+                users.forEach((user) => {
+                    users.user = _.pick(user, userOutFields);
+                });
+                res.send(users);
+            } else {
+                res.status(404).send();
+            }
+
         }, (e) => {
             res.status(400).send();
         });
