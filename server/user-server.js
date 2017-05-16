@@ -91,7 +91,8 @@ const addUserRoutes = (app, _, authenticate) => {
     });
 
     app.patch('/users/change-password/:token', authenticate, (req, res) => {
-        let token = req.params.token;
+
+        var token = req.header('x-auth');
         let {
             oldPassword
         } = req.body;

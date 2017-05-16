@@ -485,7 +485,7 @@ describe('UPDATE /users/:token', () => {
 
 });
 
-describe('UPDATE /users/change-password/:token', () => {
+describe('UPDATE /users/change-password', () => {
 
   it('should update password for logged in user if old and new match', (done) => {
     let user = _.clone(users[1]);
@@ -499,7 +499,7 @@ describe('UPDATE /users/change-password/:token', () => {
     request(app)
       .patch('/users/change-password/' + token)
       .set({
-        'x-auth': users[1].tokens[0].token
+        'x-auth': token
       })
       .send(body)
       .expect(200)
@@ -527,7 +527,7 @@ describe('UPDATE /users/change-password/:token', () => {
       newPassword
     };
     request(app)
-      .patch('/users/change-password/' + token)
+      .patch('/users/change-password')
       .set({
         'x-auth': users[0].tokens[0].token
       })
@@ -554,9 +554,9 @@ describe('UPDATE /users/change-password/:token', () => {
       newPassword
     };
     request(app)
-      .patch('/users/change-password/' + token)
+      .patch('/users/change-password/')
       .set({
-        'x-auth': users[1].tokens[0].token
+        'x-auth': user.tokens[0].token
       })
       .send(body)
       .expect(401)

@@ -75,11 +75,11 @@ MediaSchema.pre('save', function (next) {
     let userCount = 0;
 
     if (numUsers > 0) {
-         users.forEach(function (name) {
+        users.forEach(function (name) {
             User.findOne({
                 name
             }).then((user) => {
-                 if (user) {
+                if (user) {
                     userIds.push(user._id);
                 };
                 userCount++;
@@ -87,8 +87,7 @@ MediaSchema.pre('save', function (next) {
                     media.users = userIds;
                     next();
                 }
-            }, (e) => {
-            });
+            }, (e) => {});
         });
     } else {
         next();
