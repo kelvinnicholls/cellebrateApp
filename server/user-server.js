@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 let config = require('./config/config.js')
 const seed = process.env.JWT_SECRET;
+
+const NOT_AUTHORISED = {
+    error: "You are not authorised to perform this action!"
+};
 
 const {
     User
@@ -39,8 +44,8 @@ const addUserRoutes = (app, _, authenticate) => {
         });
     });
 
-    app.patch('/users/:id', authenticate, (req, res) => {
-        let token = req.params.id;
+    app.patch('/users/:token', authenticate, (req, res) => {
+        let token = req.params.token;
 
         User.findByToken(token).then((user) => {
             if (!user) {
@@ -83,7 +88,71 @@ const addUserRoutes = (app, _, authenticate) => {
         }).catch((e) => {
             res.status(401).send();
         });
+    });
 
+    app.patch('/users/change-password/:token', authenticate, (req, res) => {
+        let token = req.params.token;
+        let {
+            oldPassword
+        } = req.body;
+        let {
+            newPassword
+        } = req.body;
+        let decoded;
+        if (oldPassword && newPassword) {
+            User.findByToken(token).then((user) => {
+
+                if (!user) {
+                    return Promise.reject();
+                };
+
+                try {
+                    decoded = jwt.verify(token, seed);
+                } catch (e) {
+                    return Promise.reject();
+                };
+
+                return bcrypt.compare(oldPassword, user.password);
+
+            }).then((passwordsMatch) => {
+
+                if (passwordsMatch && req.user._id == decoded._id) {
+                    let userObj = {
+                        '_id': decoded._id,
+                        'tokens.token': token,
+                        'tokens.access': 'auth'
+                    };
+                    let body = {
+                        password: newPassword
+                    };
+
+                    User.findOneAndUpdate(userObj, {
+                        $set: body
+                    }, {
+                        new: true
+                    }).then((user) => {
+                        if (user) {
+                            res.send(_.pick(user, userOutFields));
+                        } else {
+                            res.status(404).send({
+                                error: "user not found for id"
+                            });
+                        };
+                    }, () => {
+                        res.status(401).send(NOT_AUTHORISED);
+                    });
+
+                } else {
+                    res.status(401).send(NOT_AUTHORISED);
+                };
+            }).catch((e) => {
+                res.status(401).send(NOT_AUTHORISED);
+            });
+        } else {
+            res.status(404).send({
+                error: "An old and new password must be passed"
+            });
+        };
     });
 
     app.get('/users/me', authenticate, (req, res) => {
@@ -124,9 +193,9 @@ const addUserRoutes = (app, _, authenticate) => {
 
     });
 
-    app.delete('/users/:id', authenticate, (req, res) => {
+    app.delete('/users/:token', authenticate, (req, res) => {
 
-        let token = req.params.id;
+        let token = req.params.token;
 
         User.findByToken(token).then((user) => {
             if (!user) {

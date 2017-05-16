@@ -2,6 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const _ = require('lodash');
 
 const {
   ObjectID
@@ -352,16 +353,16 @@ describe('DELETE /users/me/token', () => {
 
 });
 
-describe('UPDATE /users/:id', () => {
+describe('UPDATE /users/:token', () => {
 
-  it('should update user for id if id for logged in user', (done) => {
-    let user = users[1];
-    let oldName = users[1].name;
-    let newName = users[1].name + ' UPDATED';
+  it('should update user for token if token for logged in user', (done) => {
+    let user = _.clone(users[1]);
+    let oldName = user.name;
+    let newName = user.name + ' UPDATED';
     user.name = newName;
-    let id = users[1].tokens[0].token;
+    let token = user.tokens[0].token;
     request(app)
-      .patch('/users/' + id)
+      .patch('/users/' + token)
       .set({
         'x-auth': users[1].tokens[0].token
       })
@@ -374,7 +375,7 @@ describe('UPDATE /users/:id', () => {
         if (err) {
           return done(err);
         }
-        User.findByToken(id).then((user) => {
+        User.findByToken(token).then((user) => {
 
           expect(user.name).toBe(newName);
           done();
@@ -383,13 +384,13 @@ describe('UPDATE /users/:id', () => {
   });
 
   it('should update user if logged in as admin and user is not you', (done) => {
-    let user = users[1];
-    let oldName = users[1].name;
-    let newName = users[1].name + ' UPDATED';
+    let user = _.clone(users[1]);
+    let oldName = user.name;
+    let newName = user.name + ' UPDATED';
     user.name = newName;
-    let id = users[1].tokens[0].token;
+    let token = user.tokens[0].token;
     request(app)
-      .patch('/users/' + id)
+      .patch('/users/' + token)
       .set({
         'x-auth': users[0].tokens[0].token
       })
@@ -402,21 +403,21 @@ describe('UPDATE /users/:id', () => {
         if (err) {
           return done(err);
         }
-        User.findByToken(id).then((user) => {
+        User.findByToken(token).then((user) => {
           expect(user.name).toBe(newName);
           done();
         }).catch((e) => done(e));
       });
   });
 
-  it('should not update user for id not owned and not admin', (done) => {
-    let user = users[0];
-    let oldName = users[0].name;
-    let newName = users[0].name + ' UPDATED';
+  it('should not update user for token not owned and not admin', (done) => {
+    let user = _.clone(users[0]);
+    let oldName = user.name;
+    let newName = user.name + ' UPDATED';
     user.name = newName;
-    let id = users[0].tokens[0].token;
+    let token = user.tokens[0].token;
     request(app)
-      .patch('/users/' + id)
+      .patch('/users/' + token)
       .set({
         'x-auth': users[1].tokens[0].token
       })
@@ -426,7 +427,7 @@ describe('UPDATE /users/:id', () => {
         if (err) {
           return done(err);
         }
-        User.findByToken(id).then((user) => {
+        User.findByToken(token).then((user) => {
           expect(user.name).toBe(oldName);
           done();
         }).catch((e) => done(e));
@@ -434,14 +435,14 @@ describe('UPDATE /users/:id', () => {
       });
   });
 
-  it('should  update user for id not owned but admin', (done) => {
-    let user = users[1];
-    let oldName = users[1].name;
-    let newName = users[1].name + ' UPDATED';
+  it('should  update user for token not owned but admin', (done) => {
+    let user = _.clone(users[1]);
+    let oldName = user.name;
+    let newName = user.name + ' UPDATED';
     user.name = newName;
-    let id = users[1].tokens[0].token;
+    let token = user.tokens[0].token;
     request(app)
-      .patch('/users/' + id)
+      .patch('/users/' + token)
       .set({
         'x-auth': users[0].tokens[0].token
       })
@@ -455,7 +456,7 @@ describe('UPDATE /users/:id', () => {
           return done(err);
         }
 
-        User.findByToken(id).then((id) => {
+        User.findByToken(token).then((user) => {
           expect(user.name).toBe(newName);
           done();
         }).catch((e) => done(e));
@@ -464,13 +465,13 @@ describe('UPDATE /users/:id', () => {
   });
 
   it('should return 401 if token found', (done) => {
-    let user = users[0];
-    let oldName = users[0].name;
-    let newName = users[0].name + ' UPDATED';
+    let user = _.clone(users[0]);
+    let oldName = user.name;
+    let newName = user.name + ' UPDATED';
     user.name = newName;
-    let id = new ObjectID().toHexString();
+    let token = new ObjectID().toHexString();
     request(app)
-      .patch('/users/' + id)
+      .patch('/users/' + token)
       .set({
         'x-auth': users[0].tokens[0].token
       })
@@ -484,9 +485,94 @@ describe('UPDATE /users/:id', () => {
 
 });
 
+describe('UPDATE /users/change-password/:token', () => {
 
+  it('should update password for logged in user if old and new match', (done) => {
+    let user = _.clone(users[1]);
+    let oldPassword = user.password;
+    let newPassword = user.password + 'UPDATED';
+    let token = user.tokens[0].token;
+    let body = {
+      oldPassword,
+      newPassword
+    };
+    request(app)
+      .patch('/users/change-password/' + token)
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send(body)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.email).toBe(user.email);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(token).then((dbUser) => {
+          expect(dbUser.email).toBe(user.email);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
 
-describe('DELETE /users/:id', () => {
+  it('should not update password for user other than logged in user', (done) => {
+    let user = _.clone(users[1]);
+    let oldPassword = user.password;
+    let newPassword = user.password + 'UPDATED';
+    let token = user.tokens[0].token;
+    let body = {
+      oldPassword,
+      newPassword
+    };
+    request(app)
+      .patch('/users/change-password/' + token)
+      .set({
+        'x-auth': users[0].tokens[0].token
+      })
+      .send(body)
+      .expect(401)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(token).then((dbUser) => {
+          expect(dbUser.email).toBe(user.email);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should not update password for logged in user if old and new don\'t match', (done) => {
+    let user = _.clone(users[1]);
+    let oldPassword = user.password + 'XXXXXXX'
+    let newPassword = user.password + 'UPDATED';
+    let token = user.tokens[0].token;
+    let body = {
+      oldPassword,
+      newPassword
+    };
+    request(app)
+      .patch('/users/change-password/' + token)
+      .set({
+        'x-auth': users[1].tokens[0].token
+      })
+      .send(body)
+      .expect(401)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findByToken(token).then((dbUser) => {
+          expect(dbUser.email).toBe(user.email);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+});
+
+describe('DELETE /users/:token', () => {
 
   it('should delete user if logged in as admin and user is not you', (done) => {
     let id = users[1].tokens[0].token;
@@ -532,7 +618,7 @@ describe('DELETE /users/:id', () => {
       });
   });
 
-    it('should not delete admin user', (done) => {
+  it('should not delete admin user', (done) => {
     let id = users[0].tokens[0].token;
     request(app)
       .delete('/users/' + id)
@@ -571,7 +657,7 @@ describe('DELETE /users/:id', () => {
         }
 
         User.findByToken(id).then((user) => {
-           expect(user).toNotExist();
+          expect(user).toNotExist();
           done();
         }).catch((e) => done(e));
 
