@@ -1,9 +1,14 @@
 const {
     ObjectID
 } = require('mongodb');
+
 const {
     Media
 } = require('../models/media');
+
+const {
+    Memory
+} = require('../models/memory');
 
 const {
     User,
@@ -22,6 +27,9 @@ const user2password = "email2.password";
 
 const mediaId1 = new ObjectID();
 const mediaId2 = new ObjectID();
+
+const memoryId1 = new ObjectID();
+const memoryId2 = new ObjectID();
 
 
 const users = [{
@@ -70,7 +78,7 @@ const medias = [{
     mediaDate: 123,
     tags: ["tag1", "tag2"],
     users: [users[0].name, users[1].name]
-},{
+}, {
     _id: mediaId2,
     location: "https://somesite/movie.mpeg",
     isUrl: true,
@@ -79,6 +87,25 @@ const medias = [{
     mediaDate: 345,
     tags: ["tag3", "tag4"],
     users: [users[0].name, users[1].name]
+}];
+
+const memories = [{
+    _id: memoryId1,
+    title: 'Memory 1',
+    description: 'Memory 1',
+    memoryDate: 456456,
+    _creator: user1Id,
+    tags: ["tag1", "tag4"],
+    users: [users[0].name, users[1].name],
+    medias: [mediaId1]
+}, {
+    _id: memoryId2,
+    title: 'Memory 2',
+    description: 'Memory 2',
+    _creator: user2Id,
+    tags: ["tag2", "tag3"],
+    users: [users[0].name, users[1].name],
+    medias: [mediaId2]
 }];
 
 
@@ -104,10 +131,23 @@ const populateMedias = (done) => {
     });
 };
 
+const populateMemories = (done) => {
+    Memory.remove({}).then(() => {
+        // return User.insertMany(users); // does not run mongoose middleware
+        let memory1 = new Memory(memories[0]).save();
+        let memory2 = new Memory(memories[1]).save();
+        return Promise.all([memory1, memory2]); // returns after both passed promises finish and calls middleware
+    }).then(() => done()).catch((err) => {
+        console.log("populateMemories", err);
+    });
+};
+
 
 module.exports = {
+    memories,
     medias,
     users,
+    populateMemories,
     populateMedias,
     populateUsers
 };

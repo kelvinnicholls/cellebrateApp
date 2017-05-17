@@ -6,6 +6,7 @@ const app = express();
 
 const {addUserRoutes} =  require('./user-server.js');
 const {addMediaRoutes} =  require('./media-server.js');
+const {addMemoryRoutes} =  require('./memory-server.js');
 const {authenticate} = require('../server/middleware/authenticate');
 const config = require('./config/config.js');
 const {mongoose} = require('./db/mongoose');
@@ -14,6 +15,7 @@ app.use(bodyParser.json());
 
 addUserRoutes (app, _, authenticate);
 addMediaRoutes (app, _, authenticate);
+addMemoryRoutes (app, _, authenticate);
 
 const port = process.env.PORT || 3000;
 

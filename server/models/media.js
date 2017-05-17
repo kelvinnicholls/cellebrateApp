@@ -8,6 +8,8 @@ const {
     ObjectID
 } = require('mongodb');
 
+//const utils = require('../utils/utils.js');
+
 let MediaSchema = new mongoose.Schema({
     location: {
         type: String,
@@ -53,6 +55,20 @@ let MediaSchema = new mongoose.Schema({
     users: [mongoose.Schema.Types.Mixed]
 });
 
+//console.log("MediaSchema",utils.schemaToObject(Object.keys(MediaSchema.paths)));
+
+// MediaSchema { location: '',
+//   isUrl: '',
+//   mediaType: '',
+//   mediaSubtype: '',
+//   description: '',
+//   _creator: '',
+//   addedDate: '',
+//   mediaDate: '',
+//   tags: '',
+//   users: '',
+//   _id: '' }
+
 // mongoose middleware fired prior to a save
 MediaSchema.pre('save', function (next) {
     let media = this;
@@ -60,7 +76,6 @@ MediaSchema.pre('save', function (next) {
     let userIds = [];
     let numUsers = media.users.length;
     let userCount = 0;
-    media.addedDate = new Date().getTime();
 
     if (numUsers > 0) {
         users.forEach(function (name) {

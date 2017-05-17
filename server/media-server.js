@@ -9,51 +9,18 @@ const {
     ObjectID
 } = require('mongodb');
 
+const utils = require('./utils/utils.js');
 
-
-let setUserIdsToNames = (ids) => {
-    return new Promise((resolve, reject) => {
-
-        let retArray = [];
-        let numIds = ids.length;
-        let idCount = 0;
-         if (numIds > 0) {
-            ids.forEach(function (id) {
-                 User.findById(id).then((user) => {
-                    if (user) {
-                        retArray.push(user.name);
-                    };
-                    idCount++;
-                    if (idCount === numIds) {
-                        return resolve(retArray);
-                    }
-                }, (e) => {
-                     return reject(e);
-                });
-            });
-        } else {
-            return resolve(retArray);
-        };
-    });
-};
+const mediaInsertFields = ['location', 'isUrl', 'name', 'mediaType', 'mediaSubtype', 'description', 'mediaDate', 'tags', 'users'];
 
 
 const addMediaRoutes = (app, _, authenticate) => {
 
     app.post('/media', authenticate, (req, res) => {
-        var media = new Media({
-            location: req.body.location,
-            isUrl: req.body.isUrl,
-            mediaType: req.body.mediaType,
-            mediaSubtype: req.body.mediaSubtype,
-            description: req.body.description,
-            mediaDate: req.body.mediaDate,
-            tags: req.body.tags,
-            users: req.body.users,
-            addedDate: new Date().getTime(),
-            _creator: req.user._id
-        });
+        let body = _.pick(req.body, mediaInsertFields);
+        let media = new Media(body);
         media._creator = req.user._id;
+        media.addedDate = new Date().getTime();
         media.save().then((doc) => {
             res.send(doc);
         }, (e) => {
@@ -73,7 +40,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             let mediaCount = 0;
             medias.forEach(function (media) {
                 if (numMedias > 0) {
-                    setUserIdsToNames(media.users).then((names) => {
+                    utils.setUserIdsToNames(media.users,User).then((names) => {
                         media.users = names;
                         mediaCount++;
                         if (mediaCount === numMedias) {
@@ -112,8 +79,8 @@ const addMediaRoutes = (app, _, authenticate) => {
         Media.findOne({
             '_id': id
         }).then((media) => {
-             if (media) {
-                setUserIdsToNames(media.users).then((names) => {
+            if (media) {
+                utils.setUserIdsToNames(media.users,User).then((names) => {
                     media.users = names;
                     res.send({
                         media
@@ -129,7 +96,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             }
 
         }, (e) => {
-             res.status(400).send();
+            res.status(400).send();
         });
     });
 

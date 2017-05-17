@@ -3,7 +3,10 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
-let config = require('../config/config.js')
+
+const config = require('../config/config.js');
+//const utils = require('../utils/utils.js');
+
 const seed = process.env.JWT_SECRET;
 let UserSchema = new mongoose.Schema({
   email: {
@@ -66,6 +69,21 @@ let UserSchema = new mongoose.Schema({
     }
   }]
 });
+
+// console.log("UserSchema",utils.schemaToObject(Object.keys(UserSchema.paths)));
+
+//  { email: '',
+//   password: '',
+//   name: '',
+//   adminUser: '',
+//   relationship: '',
+//   dob: '',
+//   profilePhotoLocation: '',
+//   twitterId: '',
+//   facebookId: '',
+//   _creator: '',
+//   tokens: '',
+//   _id: '' }
 
 //override this method
 UserSchema.methods.toJSON = function () {
