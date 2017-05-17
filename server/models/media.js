@@ -8,7 +8,7 @@ const {
     ObjectID
 } = require('mongodb');
 
-//const utils = require('../utils/utils.js');
+const utils = require('../utils/utils.js');
 
 let MediaSchema = new mongoose.Schema({
     location: {
@@ -71,30 +71,7 @@ let MediaSchema = new mongoose.Schema({
 
 // mongoose middleware fired prior to a save
 MediaSchema.pre('save', function (next) {
-    let media = this;
-    let users = this.users;
-    let userIds = [];
-    let numUsers = media.users.length;
-    let userCount = 0;
-
-    if (numUsers > 0) {
-        users.forEach(function (name) {
-            User.findOne({
-                name
-            }).then((user) => {
-                if (user) {
-                    userIds.push(user._id);
-                };
-                userCount++;
-                if (userCount === numUsers) {
-                    media.users = userIds;
-                    next();
-                }
-            }, (e) => {});
-        });
-    } else {
-        next();
-    };
+   utils.setUserNamesToIds(User,this,next);
 });
 
 var Media = mongoose.model('Media', MediaSchema);

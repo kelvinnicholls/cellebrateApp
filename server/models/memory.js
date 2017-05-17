@@ -10,7 +10,7 @@ const {
     ObjectID
 } = require('mongodb');
 
-//const utils = require('../utils/utils.js');
+const utils = require('../utils/utils.js');
 
 
 let MemorySchema = new mongoose.Schema({
@@ -54,30 +54,7 @@ let MemorySchema = new mongoose.Schema({
 
 // mongoose middleware fired prior to a save
 MemorySchema.pre('save', function (next) {
-    let memory = this;
-    let users = this.users;
-    let userIds = [];
-    let numUsers = memory.users.length;
-    let userCount = 0;
-
-    if (numUsers > 0) {
-        users.forEach(function (name) {
-            User.findOne({
-                name
-            }).then((user) => {
-                if (user) {
-                    userIds.push(user._id);
-                };
-                userCount++;
-                if (userCount === numUsers) {
-                    memory.users = userIds;
-                    next();
-                }
-            }, (e) => {});
-        });
-    } else {
-        next();
-    };
+    utils.setUserNamesToIds(User,this,next);
 });
 
 var Memory = mongoose.model('Memory', MemorySchema);

@@ -35,5 +35,31 @@ utils.setUserIdsToNames = (ids,User) => {
     });
 };
 
+utils.setUserNamesToIds = (User,obj,next) => {
+
+    let users = obj.users;
+    let userIds = [];
+    let numUsers = obj.users.length;
+    let userCount = 0;
+
+    if (numUsers > 0) {
+        users.forEach(function (name) {
+            User.findOne({
+                name
+            }).then((user) => {
+                if (user) {
+                    userIds.push(user._id);
+                };
+                userCount++;
+                if (userCount === numUsers) {
+                    obj.users = userIds;
+                    return next();
+                }
+            }, (e) => {return});
+        });
+    } else {
+        return next();
+    };
+};
 
 module.exports = utils;
