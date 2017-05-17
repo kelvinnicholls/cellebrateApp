@@ -2,6 +2,8 @@ const expect = require('expect');
 const request = require('supertest');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const _ = require('lodash');
+
 
 const {
   ObjectID
@@ -108,7 +110,6 @@ describe('POST /media', () => {
       mediaType: "Movie",
       mediaSubtype: "mpeg4",
       description: "Movie 2",
-      addedDate: 5646556,
       mediaDate: 14565623,
       tags: ["tag5", "tag6"],
       users: [users[1].name]
@@ -129,12 +130,14 @@ describe('POST /media', () => {
           return done(err);
         }
 
-        Media.find({
+        Media.findOne({
           location: media.location
-        }).then((medias) => {
-          expect(medias.length).toBe(1);
-          expect(medias[0].location).toBe(media.location);
-          expect(new ObjectID(medias[0].users[0])).toEqual(users[1]._id);
+        }).then((dbMedia) => {
+          expect(dbMedia).toExist();
+          expect(dbMedia.addedDate).toExist();
+          expect(dbMedia._creator).toExist();
+          expect(dbMedia.location).toBe(media.location);
+          expect(new ObjectID(dbMedia.users[0])).toEqual(users[1]._id);
           done();
         }).catch((e) => done(e));
       });
@@ -299,9 +302,9 @@ describe('UPDATE /medias/:id', () => {
 
 
   it('should update media for id', (done) => {
-    let media = medias[0];
-    let oldLocation = medias[0].location;
-    let newLocation = medias[0].location + ' UPDATED';
+    let media = _.clone(medias[0]);
+    let oldLocation = media.location;
+    let newLocation = media.location + ' UPDATED';
     media.location = newLocation;
     let id = medias[0]._id.toHexString();
     request(app)
@@ -329,11 +332,11 @@ describe('UPDATE /medias/:id', () => {
   });
 
   it('should not update media for id not owned and not admin', (done) => {
-    let media = medias[0];
-    let oldLocation = medias[0].location;
-    let newLocation = medias[0].location + ' UPDATED';
+    let media = _.clone(medias[0]);
+    let oldLocation = media.location;
+    let newLocation = media.location + ' UPDATED';
     media.location = newLocation;
-    let id = medias[0]._id.toHexString();
+    let id = media._id.toHexString();
     request(app)
       .patch('/medias/' + id)
       .set({
@@ -354,11 +357,11 @@ describe('UPDATE /medias/:id', () => {
   });
 
   it('should  update media for id not owned but admin', (done) => {
-    let media = medias[1];
-    let oldLocation = medias[1].location;
-    let newLocation = medias[1].location + ' UPDATED';
+    let media = _.clone(medias[1]);
+    let oldLocation = media.location;
+    let newLocation = media.location + ' UPDATED';
     media.location = newLocation;
-    let id = medias[1]._id.toHexString();
+    let id = media._id.toHexString();
     request(app)
       .patch('/medias/' + id)
       .set({
@@ -386,9 +389,9 @@ describe('UPDATE /medias/:id', () => {
 
 
   it('should return 404 if media not found', (done) => {
-    let media = medias[0];
-    let oldLocation = medias[0].location;
-    let newLocation = medias[0].location + ' UPDATED';
+    let media = _.clone(medias[0]);
+    let oldLocation = media.location;
+    let newLocation = media.location + ' UPDATED';
     media.location = newLocation;
     let id = new ObjectID().toHexString();
     request(app)
@@ -405,9 +408,9 @@ describe('UPDATE /medias/:id', () => {
   });
 
   it('should return 404 of non ObjectID\'s', (done) => {
-    let media = medias[0];
-    let oldLocation = medias[0].location;
-    let newLocation = medias[0].location + ' UPDATED';
+    let media = _.clone(medias[0]);
+    let oldLocation = media.location;
+    let newLocation = media.location + ' UPDATED';
     media.location = newLocation;
     let id = 'x';
     request(app)

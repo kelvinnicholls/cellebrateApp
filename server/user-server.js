@@ -21,6 +21,7 @@ const addUserRoutes = (app, _, authenticate) => {
         if (req.user.adminUser) {
             let body = _.pick(req.body, usersInsertFields);
             var user = new User(body);
+            user._creator = req.user._id;
             user.save().then((user) => {
                 res.send(_.pick(user, userOutFields));
             }).catch((e) => {

@@ -143,10 +143,11 @@ describe('POST /users', () => {
         }
         User.findOne({
           email
-        }).then((user) => {
-          expect(user).toExist();
-          expect(user.email).toBe(email);
-          expect(user.password).toNotBe(password);
+        }).then((dbUser) => {
+          expect(dbUser).toExist();
+          expect(dbUser._creator).toExist();
+          expect(dbUser.email).toBe(email);
+          expect(dbUser.password).toNotBe(password);
           done();
         }).catch((e) => done(e));
       });

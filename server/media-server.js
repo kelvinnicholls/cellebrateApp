@@ -53,7 +53,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             addedDate: new Date().getTime(),
             _creator: req.user._id
         });
-
+        media._creator = req.user._id;
         media.save().then((doc) => {
             res.send(doc);
         }, (e) => {

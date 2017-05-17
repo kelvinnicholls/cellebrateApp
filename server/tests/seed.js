@@ -31,6 +31,7 @@ const users = [{
         name: "Kelv",
         adminUser: true,
         relationship: "Son",
+        _creator: user2Id,
         dob: 111,
         tokens: [{
             access: 'auth',
@@ -47,6 +48,7 @@ const users = [{
         name: "Sharon",
         adminUser: false,
         relationship: "Daughter",
+        _creator: user2Id,
         tokens: [{
             access: 'auth',
             token: jwt.sign({
@@ -65,7 +67,6 @@ const medias = [{
     mediaSubtype: "mpeg4",
     description: "Movie 1",
     _creator: user1Id,
-    addedDate: 123,
     mediaDate: 123,
     tags: ["tag1", "tag2"],
     users: [users[0].name, users[1].name]
@@ -75,7 +76,6 @@ const medias = [{
     isUrl: true,
     description: "Url 1",
     _creator: user2Id,
-    addedDate: 345,
     mediaDate: 345,
     tags: ["tag3", "tag4"],
     users: [users[0].name, users[1].name]

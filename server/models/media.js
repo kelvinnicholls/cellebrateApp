@@ -8,18 +8,6 @@ const {
     ObjectID
 } = require('mongodb');
 
-// {
-//     location: "",
-//     isUrl: false,
-//     mediaType:  "",
-//     mediaSubtype: ,
-//     description: "",
-//     _creator: ,
-//     addedDate: 123,
-//     mediaDate: 123,
-//     tags: [""],
-//     users: []
-// }
 let MediaSchema = new mongoose.Schema({
     location: {
         type: String,
@@ -56,7 +44,6 @@ let MediaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId
     },
     addedDate: {
-        required: true,
         type: Number
     },
     mediaDate: {
@@ -73,6 +60,7 @@ MediaSchema.pre('save', function (next) {
     let userIds = [];
     let numUsers = media.users.length;
     let userCount = 0;
+    media.addedDate = new Date().getTime();
 
     if (numUsers > 0) {
         users.forEach(function (name) {

@@ -42,6 +42,19 @@ let UserSchema = new mongoose.Schema({
   dob: {
     type: Number
   },
+  profilePhotoLocation: {
+    type: String
+  },
+  twitterId: {
+    type: String
+  },
+  facebookId: {
+    type: String
+  },
+  _creator: {
+    required: true,
+    type: mongoose.Schema.Types.ObjectId
+  },
   tokens: [{
     access: {
       type: String,
