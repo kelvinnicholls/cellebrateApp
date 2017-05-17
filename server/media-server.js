@@ -28,7 +28,7 @@ const addMediaRoutes = (app, _, authenticate) => {
         });
     });
 
-    app.get('/medias/', authenticate, (req, res) => {
+    app.get('/medias', authenticate, (req, res) => {
 
         let mediasObj = {};
         if (!req.user.adminUser) {
@@ -36,31 +36,11 @@ const addMediaRoutes = (app, _, authenticate) => {
         };
 
         Media.find(mediasObj).then((medias) => {
-            let numMedias = medias.length;
-            let mediaCount = 0;
-            medias.forEach(function (media) {
-                if (numMedias > 0) {
-                    utils.setUserIdsToNames(media.users,User).then((names) => {
-                        media.users = names;
-                        mediaCount++;
-                        if (mediaCount === numMedias) {
-                            res.send({
-                                medias
-                            });
-                        };
-
-                    }).catch((e) => {
-                        res.status(400).send();
-                    });
-                } else {
-                    res.send({
-                        medias
-                    });
-                };
-            }, (e) => {
-                res.status(400).send();
-            });
-        });
+            console.log("app.get('/medias'", medias);
+            utils.setMediasUserNamesToIds(medias, res, User);
+        }).catch((e) => {
+            console.log("app.get('/medias/' error", e);
+        });;
     });
 
 
@@ -80,7 +60,7 @@ const addMediaRoutes = (app, _, authenticate) => {
             '_id': id
         }).then((media) => {
             if (media) {
-                utils.setUserIdsToNames(media.users,User).then((names) => {
+                utils.setUserIdsToNames(media.users, User).then((names) => {
                     media.users = names;
                     res.send({
                         media
@@ -99,6 +79,22 @@ const addMediaRoutes = (app, _, authenticate) => {
             res.status(400).send();
         });
     });
+
+
+    app.get('/medias/byCriteria/', authenticate, (req, res) => {
+        let {
+            tags,
+            users,
+            fromDate,
+            toDate
+        } = req.body;
+
+        Media.findByCriteria(tags, users, fromDate, toDate).then((medias) => {
+            utils.setMediasUserNamesToIds(medias, res, User);
+        });
+
+    });
+
 
 
     app.delete('/medias/:id', authenticate, (req, res) => {

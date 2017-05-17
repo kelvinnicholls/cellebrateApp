@@ -9,15 +9,15 @@ utils.schemaToObject = (propsArr) => {
 };
 
 
-utils.setUserIdsToNames = (ids,User) => {
+utils.setUserIdsToNames = (ids, User) => {
     return new Promise((resolve, reject) => {
 
         let retArray = [];
         let numIds = ids.length;
         let idCount = 0;
-         if (numIds > 0) {
+        if (numIds > 0) {
             ids.forEach(function (id) {
-                 User.findById(id).then((user) => {
+                User.findById(id).then((user) => {
                     if (user) {
                         retArray.push(user.name);
                     };
@@ -26,7 +26,7 @@ utils.setUserIdsToNames = (ids,User) => {
                         return resolve(retArray);
                     }
                 }, (e) => {
-                     return reject(e);
+                    return reject(e);
                 });
             });
         } else {
@@ -35,7 +35,7 @@ utils.setUserIdsToNames = (ids,User) => {
     });
 };
 
-utils.setUserNamesToIds = (User,obj,next) => {
+utils.setUserNamesToIds = (User, obj, next) => {
 
     let users = obj.users;
     let userIds = [];
@@ -55,11 +55,41 @@ utils.setUserNamesToIds = (User,obj,next) => {
                     obj.users = userIds;
                     return next();
                 }
-            }, (e) => {return});
+            }, (e) => {
+                return
+            });
         });
     } else {
         return next();
     };
+};
+
+utils.setMediasUserNamesToIds = (medias, res, User) => {
+    console.log("utils.setMediasUserNamesToId'", medias);
+    let numMedias = medias.length;
+    let mediaCount = 0;
+    medias.forEach(function (media) {
+         if (numMedias > 0) {
+            utils.setUserIdsToNames(media.users, User).then((names) => {
+                media.users = names;
+                mediaCount++;
+                if (mediaCount === numMedias) {
+                    return res.send({
+                        medias
+                    });
+                };
+
+            }).catch((e) => {
+                res.status(400).send();
+            });
+        } else {
+            res.send({
+                medias
+            });
+        };
+    }, (e) => {
+        res.status(400).send();
+    });
 };
 
 module.exports = utils;

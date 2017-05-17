@@ -69,9 +69,42 @@ let MediaSchema = new mongoose.Schema({
 //   users: '',
 //   _id: '' }
 
+
+MediaSchema.statics.findByCriteria = function (tags, users, fromDate, toDate) {
+    let Media = this;
+    queryObj = {};
+
+    if (fromDate) {
+        queryObj.mediaDate = {
+            "$gte": fromDate
+        }
+    };
+    if (toDate) {
+        queryObj.mediaDate += {
+            "$lte": toDate
+        }
+    };
+    if (tags && tags.length > 0) {
+        queryObj.tags = {
+            "$all": tags
+        }
+    };
+    if (users && users.length > 0) {
+        queryObj.users = {
+            "$all": users
+        }
+    };
+
+    return Media.find(queryObj).then((medias) => {
+        return medias;
+    }).catch((e) => {
+        return [];
+    });
+};
+
 // mongoose middleware fired prior to a save
 MediaSchema.pre('save', function (next) {
-   utils.setUserNamesToIds(User,this,next);
+    utils.setUserNamesToIds(User, this, next);
 });
 
 var Media = mongoose.model('Media', MediaSchema);

@@ -139,7 +139,7 @@ UserSchema.statics.findByCredentials = function (email, password) {
       });
     });
   });
-}
+};
 
 
 UserSchema.statics.findByToken = function (token) {
@@ -156,7 +156,7 @@ UserSchema.statics.findByToken = function (token) {
     'tokens.token': token,
     'tokens.access': 'auth'
   })
-}
+};
 
 
 // mongoose middleware fired prior to a save
