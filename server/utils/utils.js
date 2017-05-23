@@ -65,7 +65,7 @@ utils.setUserNamesToIds = (User, obj, next) => {
 };
 
 utils.setMediasUserNamesToIds = (medias, res, User) => {
-    console.log("utils.setMediasUserNamesToId'", medias);
+    //console.log("utils.setMediasUserNamesToId'", medias);
     let numMedias = medias.length;
     let mediaCount = 0;
     medias.forEach(function (media) {

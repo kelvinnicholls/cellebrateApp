@@ -36,7 +36,7 @@ const addMediaRoutes = (app, _, authenticate) => {
         };
 
         Media.find(mediasObj).then((medias) => {
-            console.log("app.get('/medias'", medias);
+            //console.log("app.get('/medias'", medias);
             utils.setMediasUserNamesToIds(medias, res, User);
         }).catch((e) => {
             console.log("app.get('/medias/' error", e);
